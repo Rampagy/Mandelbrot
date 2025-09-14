@@ -12,10 +12,13 @@ use winit_input_helper::WinitInputHelper;
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
 const MAX_ITER: u32 = 100;
+const ZOOM_SPEED: f64 = 1.01;
 
-/// Representation of the application state. In this example, a box will bounce around the screen.
+/// Representation of the application state
 struct Mandelbrot {
-
+    center_x: f64,
+    center_y: f64,
+    zoom: f64
 }
 
 fn main() -> Result<(), Error> {
@@ -36,7 +39,7 @@ fn main() -> Result<(), Error> {
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(WIDTH, HEIGHT, surface_texture)?
     };
-    let mandelbrot = Mandelbrot::new();
+    let mut mandelbrot = Mandelbrot::new();
 
     let res = event_loop.run(|event, elwt| {
         // Draw the current frame
@@ -60,6 +63,9 @@ fn main() -> Result<(), Error> {
                 return;
             }
 
+            // Automatically zoom in by 10% each frame
+            mandelbrot.zoom *= ZOOM_SPEED;
+
             // Resize the window
             if let Some(size) = input.window_resized() {
                 if let Err(_) = pixels.resize_surface(size.width, size.height) {
@@ -79,19 +85,25 @@ impl Mandelbrot {
     /// Create a new mandelbrot instance.
     fn new() -> Self {
         Self {
-
+            // You can change these coordinates to zoom into different points
+            // Some interesting coordinates:
+            // Main cardioid: (-0.75, 0.0)
+            // Period 2 bulb: (-1.25, 0.0)
+            // Spiral: (-0.744, 0.1)
+            // Mini Mandelbrot: (-1.77, 0.0)
+            center_x: -1.25,
+            center_y: 0.0,
+            zoom: 1.0
         }
     }
 
     fn mandelbrot(&self, x: u32, y: u32) -> u32 {
-        // Map pixel coordinates to Mandelbrot set coordinates
-        let x_min = -2.0;
-        let x_max = 0.8;
-        let y_min = -1.4;
-        let y_max = 1.4;
-
-        let x_coord = x_min + (x_max - x_min) * (x as f32) / (WIDTH as f32);
-        let y_coord = y_min + (y_max - y_min) * (y as f32) / (HEIGHT as f32);
+        let aspect_ratio = WIDTH as f64 / HEIGHT as f64;
+        let zoom_width = 2.5 / self.zoom;
+        
+        // Map pixel coordinates to complex plane, centered on target point
+        let x_coord = self.center_x + (x as f64 - WIDTH as f64 / 2.0) * zoom_width / WIDTH as f64 * aspect_ratio;
+        let y_coord = self.center_y + (y as f64 - HEIGHT as f64 / 2.0) * zoom_width / HEIGHT as f64;
 
         let c = num::Complex::new(x_coord, y_coord);
         let mut z = num::Complex::new(0.0, 0.0);
