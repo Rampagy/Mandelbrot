@@ -11,7 +11,7 @@ use winit_input_helper::WinitInputHelper;
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const MAX_ITER: u32 = 100;
+const MAX_ITER: u32 = 1000;  // More iterations = smoother color gradients and more detail
 const ZOOM_SPEED: f64 = 1.01;
 
 /// Representation of the application state
@@ -27,7 +27,7 @@ fn main() -> Result<(), Error> {
     let window = {
         let size = LogicalSize::new(WIDTH as f64, HEIGHT as f64);
         WindowBuilder::new()
-            .with_title("Hello Pixels")
+            .with_title("Mandelbrot")
             .with_inner_size(size)
             .with_min_inner_size(size)
             .build(&event_loop)
@@ -36,7 +36,7 @@ fn main() -> Result<(), Error> {
 
     let mut pixels = {
         let window_size = window.inner_size();
-        let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
+        let surface_texture = SurfaceTexture::new(window_size.width*3, window_size.height*4, &window);
         Pixels::new(WIDTH, HEIGHT, surface_texture)?
     };
     let mut mandelbrot = Mandelbrot::new();
@@ -91,8 +91,8 @@ impl Mandelbrot {
             // Period 2 bulb: (-1.25, 0.0)
             // Spiral: (-0.744, 0.1)
             // Mini Mandelbrot: (-1.77, 0.0)
-            center_x: -1.25,
-            center_y: 0.0,
+            center_x: 0.0,
+            center_y: 1.0,
             zoom: 1.0
         }
     }
@@ -135,9 +135,9 @@ impl Mandelbrot {
                 // Not in the Mandelbrot set
                 // point escaped, color based on how quickly
                 // using a simple red-yellow gradient
-                [std::cmp::min(255, m*255 / 50) as u8,
+                [std::cmp::min(255, m*255 / 40) as u8,
                  std::cmp::min(255, m*255 / 100) as u8, 
-                 0, 
+                 std::cmp::min(255, m*8) as u8, 
                  255]
             };
 
